@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LabTracker — Evidencija hemikalija</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;font-size:14px;line-height:1.5}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#0f172a}::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+
+/* Header */
+.hdr{background:#1e293b;border-bottom:1px solid #334155;padding:16px 24px 0;position:sticky;top:0;z-index:100}
+.hdr-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.logo-wrap{background:rgba(45,212,191,0.15);border-radius:10px;padding:8px;display:flex}
+.logo-title{font-size:17px;font-weight:700;color:#f1f5f9}
+.logo-sub{font-size:11px;color:#64748b}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.stats-txt{font-size:12px;color:#64748b}
+.stats-txt b{color:#e2e8f0}
+
+/* Tabs */
+.tabs{display:flex;gap:2px}
+.tab-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:transparent;color:#64748b;border:none;border-top:2px solid transparent;cursor:pointer;font-size:13px;font-weight:600;border-radius:6px 6px 0 0;transition:color .15s}
+.tab-btn:hover{color:#94a3b8}
+.tab-btn.active{background:#0f172a;color:#2dd4bf;border-top-color:#2dd4bf}
+.tab-btn svg{width:14px;height:14px;vertical-align:middle}
+
+/* Content */
+.content{padding:24px;max-width:920px;margin:0 auto}
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.sec-title{font-size:15px;font-weight:700}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;transition:opacity .15s}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn svg{width:15px;height:15px}
+.btn-teal{background:#2dd4bf;color:#0f172a}
+.btn-teal:hover:not(:disabled){opacity:.88}
+.btn-indigo{background:#6366f1;color:#fff}
+.btn-indigo:hover:not(:disabled){opacity:.88}
+.btn-green{background:#22c55e;color:#0f172a}
+.btn-green:hover:not(:disabled){opacity:.88}
+.btn-export{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);border-radius:8px;cursor:pointer;color:#6366f1;font-weight:600;font-size:12px;white-space:nowrap}
+.btn-export:hover{background:rgba(99,102,241,.25)}
+.btn-export svg{width:13px;height:13px}
+.btn-icon{background:transparent;border:1px solid #334155;border-radius:7px;padding:6px;cursor:pointer;display:inline-flex;align-items:center;color:#ef4444}
+.btn-icon:hover{border-color:#ef4444}
+.btn-icon svg{width:14px;height:14px}
+.btn-restock{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);border-radius:7px;cursor:pointer;color:#6366f1;font-size:12px;font-weight:600}
+.btn-restock svg{width:13px;height:13px}
+.btn-full{width:100%;padding:12px;font-size:14px;font-weight:700;border:none;border-radius:9px;cursor:pointer;font-family:inherit;transition:opacity .15s}
+.btn-full:disabled{opacity:.4;cursor:not-allowed}
+
+/* Cards */
+.card{background:#1e293b;border-radius:12px;padding:14px 18px;border:1px solid #334155}
+.card.b-red{border-color:#ef4444}
+.card.b-amber{border-color:#f59e0b}
+.card-row{display:flex;align-items:center;gap:14px}
+.chem-ico{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chem-ico svg{width:17px;height:17px}
+.chem-ico.solid{background:rgba(45,212,191,.1);color:#2dd4bf}
+.chem-ico.liq{background:rgba(56,189,248,.1);color:#38bdf8}
+.chem-info{flex:1;min-width:0}
+.name-row{display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap}
+.chem-name{font-weight:700;font-size:14px}
+.badge{display:inline-flex;align-items:center;font-size:11px;padding:2px 7px;border-radius:4px;font-weight:600}
+.badge.formula{color:#94a3b8;background:#334155;font-family:monospace}
+.badge.liq{color:#38bdf8;background:rgba(56,189,248,.1)}
+.badge.crit{color:#ef4444;background:rgba(239,68,68,.1)}
+.badge.low{color:#f59e0b;background:rgba(245,158,11,.1)}
+.badge.type{color:#2dd4bf;background:rgba(45,212,191,.1)}
+.meta{font-size:12px;color:#64748b;display:flex;gap:14px;flex-wrap:wrap}
+.meta b{color:#94a3b8}
+.stock{font-size:13px;font-weight:700}
+.stock.teal{color:#2dd4bf}.stock.amber{color:#f59e0b}.stock.red{color:#ef4444}
+.card-acts{display:flex;gap:8px;align-items:center;flex-shrink:0}
+
+/* Empty */
+.empty{text-align:center;padding:70px 20px;color:#475569}
+.empty svg{width:52px;height:52px;margin:0 auto 14px;opacity:.2;display:block}
+.empty p{font-weight:600;margin-bottom:6px}
+.empty small{font-size:13px}
+
+/* Form */
+.flabel{font-size:12px;color:#94a3b8;display:block;margin-bottom:5px;font-weight:500}
+.flabel.req::after{content:' *';color:#ef4444}
+input[type=text],input[type=number],select{width:100%;padding:9px 12px;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:13px;outline:none;font-family:inherit}
+input[type=text]:focus,input[type=number]:focus,select:focus{border-color:#2dd4bf}
+select{cursor:pointer}
+.frow{display:grid;gap:10px}
+.cols2{grid-template-columns:1fr 1fr}
+.cols3{grid-template-columns:1fr 1fr 1fr}
+.cols21{grid-template-columns:2fr 1fr}
+.fgrp{margin-bottom:0}
+
+/* Unit grid */
+.unit-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.unit-btn{padding:8px 4px;border:1px solid #334155;border-radius:7px;cursor:pointer;font-weight:600;font-size:12px;background:#0f172a;color:#94a3b8;text-align:center;transition:all .15s}
+.unit-btn.act-solid{background:#2dd4bf;color:#0f172a;border-color:#2dd4bf}
+.unit-btn.act-liq{background:#38bdf8;color:#0f172a;border-color:#38bdf8}
+
+/* Type toggle */
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.type-btn{padding:10px;border:1px solid #334155;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;background:#1e293b;color:#94a3b8;text-align:center;transition:all .15s;font-family:inherit}
+.type-btn.active{background:#2dd4bf;color:#0f172a;border-color:#2dd4bf}
+
+/* DB dropdown */
+.db-drop{background:#0f172a;border:1px solid #334155;border-radius:8px;margin-top:4px;overflow:hidden}
+.db-item{padding:9px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:13px;border-bottom:1px solid #1e293b}
+.db-item:last-child{border-bottom:none}
+.db-item:hover{background:#1e293b}
+.db-form{color:#64748b;font-family:monospace}
+
+/* AI box */
+.ai-box{background:#0f172a;border-radius:10px;padding:14px;border:1px dashed #334155;margin-bottom:18px}
+.ai-lbl{font-size:12px;color:#6366f1;display:block;margin-bottom:7px;font-weight:600}
+.ai-row{display:flex;gap:8px}
+.ai-note{margin-top:8px;font-size:12px;color:#94a3b8;line-height:1.5}
+.ai-note.err{color:#ef4444}
+.ai-warn{margin-top:6px;font-size:12px;color:#94a3b8}
+.ai-warn a{color:#6366f1;cursor:pointer}
+
+/* Density */
+.den-box{background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.25);border-radius:8px;padding:12px;margin-bottom:11px}
+.den-lbl{font-size:12px;color:#38bdf8;display:block;margin-bottom:5px;font-weight:600}
+.den-hint{margin-top:6px;font-size:11px;color:#64748b}
+
+/* Result */
+.result-box{border-radius:12px;padding:20px}
+.result-box.ok{background:rgba(34,197,94,.05);border:1px solid #22c55e}
+.result-box.fail{background:rgba(239,68,68,.05);border:1px solid #ef4444}
+.res-hdr{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.res-hdr svg{width:20px;height:20px}
+.res-status{font-weight:700;font-size:15px}
+.res-rows{display:grid}
+.res-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05);gap:10px}
+.res-row:last-child{border-bottom:none}
+.res-lbl{font-size:13px;color:#64748b}
+.res-val{font-size:13px;font-weight:600;color:#e2e8f0}
+.res-val.mono{font-family:monospace;font-size:11px;color:#94a3b8}
+.res-val.accent{font-size:20px;font-weight:800;color:#2dd4bf}
+.res-val.sky{font-size:20px;font-weight:800;color:#38bdf8}
+.res-val.green{font-size:16px;font-weight:700;color:#22c55e}
+.res-val.red{font-size:16px;font-weight:700;color:#ef4444}
+.done-msg{background:rgba(34,197,94,.1);border:1px solid #22c55e;border-radius:10px;padding:16px;text-align:center;color:#22c55e;font-weight:700;font-size:15px}
+.hint-teal{font-size:12px;color:#38bdf8;margin-top:5px}
+.hint-indigo{font-size:12px;color:#6366f1;margin-top:6px}
+
+/* History */
+.hist-item{background:#1e293b;border-radius:12px;padding:14px 18px;border:1px solid #334155;display:flex;align-items:center;gap:14px}
+.hist-info{flex:1;min-width:0}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
+.modal{background:#1e293b;border-radius:16px;padding:24px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto}
+.modal.sm{max-width:360px}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-size:16px;font-weight:700}
+.btn-close{background:transparent;border:none;color:#94a3b8;cursor:pointer;display:inline-flex;padding:2px}
+.btn-close:hover{color:#e2e8f0}
+.btn-close svg{width:20px;height:20px}
+.search-wrap{position:relative}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:#64748b;pointer-events:none}
+.search-wrap input{padding-left:30px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinning{animation:spin .8s linear infinite;display:inline-flex}
+.mb11{margin-bottom:11px}
+.mb14{margin-bottom:14px}
+.mb18{margin-bottom:18px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+
+// ── Chemical Database ────────────────────────────────────────────────
+const DB = [
+  {name:"Natrijum-hidroksid",f:"NaOH",M:40.00,n:1,liq:false},
+  {name:"Kalijum-permanganat",f:"KMnO₄",M:158.03,n:5,liq:false},
+  {name:"Kalijum-dihromat",f:"K₂Cr₂O₇",M:294.18,n:6,liq:false},
+  {name:"Hlorovodonična kiselina (37%)",f:"HCl",M:36.46,n:1,liq:true,d:1.19},
+  {name:"Sumporna kiselina (96%)",f:"H₂SO₄",M:98.08,n:2,liq:true,d:1.84},
+  {name:"Azotna kiselina (65%)",f:"HNO₃",M:63.01,n:1,liq:true,d:1.40},
+  {name:"Fosforna kiselina (85%)",f:"H₃PO₄",M:97.99,n:3,liq:true,d:1.69},
+  {name:"Sirćetna kiselina (glacialna)",f:"CH₃COOH",M:60.05,n:1,liq:true,d:1.05},
+  {name:"Oksalna kiselina (dihidrat)",f:"H₂C₂O₄·2H₂O",M:126.07,n:2,liq:false},
+  {name:"Natrijum-tiosulfat (pentahidrat)",f:"Na₂S₂O₃·5H₂O",M:248.18,n:1,liq:false},
+  {name:"Kalijum-jodat",f:"KIO₃",M:214.00,n:6,liq:false},
+  {name:"EDTA (dinatrijum, dihidrat)",f:"Na₂H₂Y·2H₂O",M:372.24,n:1,liq:false},
+  {name:"Natrijum-hlorid",f:"NaCl",M:58.44,n:1,liq:false},
+  {name:"Kalijum-biftalat",f:"KHC₈H₄O₄",M:204.22,n:1,liq:false},
+  {name:"Natrijum-karbonat",f:"Na₂CO₃",M:105.99,n:2,liq:false},
+  {name:"Barijum-hlorid (dihidrat)",f:"BaCl₂·2H₂O",M:244.26,n:2,liq:false},
+  {name:"Kalijum-hlorid",f:"KCl",M:74.55,n:1,liq:false},
+  {name:"Kalijum-hidroksid",f:"KOH",M:56.11,n:1,liq:false},
+  {name:"Amonijum-hlorid",f:"NH₄Cl",M:53.49,n:1,liq:false},
+  {name:"Cink-sulfat (heptahidrat)",f:"ZnSO₄·7H₂O",M:287.56,n:2,liq:false},
+  {name:"Bakar(II)-sulfat (pentahidrat)",f:"CuSO₄·5H₂O",M:249.69,n:2,liq:false},
+  {name:"Gvožđe(III)-hlorid (heksahidrat)",f:"FeCl₃·6H₂O",M:270.30,n:3,liq:false},
+  {name:"Amonijum-gvožđe(II)-sulfat",f:"(NH₄)₂Fe(SO₄)₂·6H₂O",M:392.14,n:1,liq:false},
+  {name:"Natrijum-hidrogenkarbonat",f:"NaHCO₃",M:84.01,n:1,liq:false},
+  {name:"Mangan(II)-sulfat (monohidrat)",f:"MnSO₄·H₂O",M:169.02,n:2,liq:false},
+  {name:"Srebro-nitrat",f:"AgNO₃",M:169.87,n:1,liq:false},
+  {name:"Natrijum-acetat (trihidrat)",f:"CH₃COONa·3H₂O",M:136.08,n:1,liq:false},
+  {name:"Amonijum-tiocijanat",f:"NH₄SCN",M:76.12,n:1,liq:false},
+  {name:"Kalijum-hromat",f:"K₂CrO₄",M:194.19,n:3,liq:false},
+  {name:"Vodonik-peroksid (30%)",f:"H₂O₂",M:34.01,n:2,liq:true,d:1.11},
+  {name:"Amonijak (25%)",f:"NH₃",M:17.03,n:1,liq:true,d:0.91},
+  {name:"Kalijum-jodid",f:"KI",M:166.00,n:1,liq:false},
+];
+
+// ── SVG Icons ─────────────────────────────────────────────────────────
+const I = {
+  flask:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31L5.5 15A4 4 0 0 0 9 21h6a4 4 0 0 0 3.5-5.69L14 9.31V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>`,
+  pkg:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+  clock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  plus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>`,
+  x:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  search:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+  dl:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+  pc:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
+  ok:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+  alert:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+  spin:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`,
+  key:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>`,
+};
+
+// ── State ─────────────────────────────────────────────────────────────
+const S = {
+  tab:'zalihe', inv:[], hist:[],
+  showAdd:false, restockId:null,
+  dbSearch:'',
+  aiLoading:false, aiNote:'', aiErr:false,
+  nc:{name:'',f:'',M:'',n:'',d:'',stock:'',unit:'g'},
+  prepType:'M',
+  result:null, doneMsg:false,
+  apiKey:''
+};
+
+// ── Persistence ───────────────────────────────────────────────────────
+function persist(){
+  localStorage.setItem('lt4_inv',JSON.stringify(S.inv));
+  localStorage.setItem('lt4_hist',JSON.stringify(S.hist));
+}
+function loadData(){
+  try{S.inv=JSON.parse(localStorage.getItem('lt4_inv'))||[];}catch(e){S.inv=[];}
+  try{S.hist=JSON.parse(localStorage.getItem('lt4_hist'))||[];}catch(e){S.hist=[];}
+  S.apiKey=localStorage.getItem('lt4_apikey')||'';
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────
+const isLiq = u => u==='mL'||u==='L';
+const toG   = (s,u) => u==='kg'?s*1000:s;
+const toML  = (s,u) => u==='L'?s*1000:s;
+const esc   = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const gv    = id => {const e=document.getElementById(id);return e?e.value:'';};
+
+// ── Render engine ─────────────────────────────────────────────────────
+function render(){
+  const fid=document.activeElement?.id;
+  const ss=document.activeElement?.selectionStart;
+  const se=document.activeElement?.selectionEnd;
+  document.getElementById('app').innerHTML=html();
+  if(fid){const el=document.getElementById(fid);if(el){el.focus();try{if(ss!=null)el.setSelectionRange(ss,se);}catch(e){}}}
+}
+
+function html(){
+  return hdr()+`<div class="content">`+
+    (S.tab==='zalihe'?tabZ():S.tab==='priprema'?tabP():tabH())+
+    `</div>`+
+    (S.showAdd?modalAdd():'')+
+    (S.restockId?modalRestock():'');
+}
+
+// ── Header ────────────────────────────────────────────────────────────
+function hdr(){
+  return `<div class="hdr">
+  <div class="hdr-top">
+    <div class="logo-wrap" style="color:#2dd4bf">${I.flask}</div>
+    <div><div class="logo-title">LabTracker</div><div class="logo-sub">Evidencija potrošnje hemikalija</div></div>
+    <div class="hdr-right">
+      <span class="stats-txt"><b>${S.inv.length}</b> hemikalija &nbsp;<b>${S.hist.length}</b> priprema</span>
+      <button class="btn-export" onclick="setApiKey()" title="Postavi Anthropic API ključ za AI pretragu">${I.key} API ključ</button>
+      <button class="btn-export" onclick="exportHTML()">${I.dl} Preuzmi HTML</button>
+    </div>
+  </div>
+  <div class="tabs">
+    ${[['zalihe','Zalihe',I.pkg],['priprema','Nova priprema',I.flask],['historija','Historija',I.clock]].map(([id,lbl,ico])=>
+      `<button class="tab-btn ${S.tab===id?'active':''}" onclick="go('${id}')">${ico} ${lbl}</button>`
+    ).join('')}
+  </div>
+</div>`;
+}
+
+// ── Zalihe tab ────────────────────────────────────────────────────────
+function tabZ(){
+  const addBtn=`<button class="btn btn-teal" onclick="openAdd()">${I.plus} Dodaj hemikaliju</button>`;
+  if(!S.inv.length) return `
+    <div class="sec-hdr"><div class="sec-title">Stanje zaliha</div>${addBtn}</div>
+    <div class="empty">${I.flask}<p>Evidencija je prazna</p><small>Kliknite "Dodaj hemikaliju" da počnete</small></div>`;
+  return `
+    <div class="sec-hdr"><div class="sec-title">Stanje zaliha</div>${addBtn}</div>
+    <div style="display:grid;gap:10px">${S.inv.map(chemCard).join('')}</div>`;
+}
+
+function chemCard(c){
+  const liq=isLiq(c.unit), base=liq?toML(c.stock,c.unit):toG(c.stock,c.unit);
+  const low=base<100, crit=base<20;
+  const sc=crit?'red':low?'amber':'teal';
+  return `<div class="card card-row ${crit?'b-red':low?'b-amber':''}">
+    <div class="chem-ico ${liq?'liq':'solid'}">${I.flask}</div>
+    <div class="chem-info">
+      <div class="name-row">
+        <span class="chem-name">${esc(c.name)}</span>
+        ${c.f?`<span class="badge formula">${esc(c.f)}</span>`:''}
+        ${liq?`<span class="badge liq">💧 Tečno</span>`:''}
+        ${crit?`<span class="badge crit">⚠ Kritično</span>`:low?`<span class="badge low">Niske zalihe</span>`:''}
+      </div>
+      <div class="meta">
+        <span>M = <b>${c.M} g/mol</b></span>
+        <span>n = <b>${c.n}</b></span>
+        ${c.density?`<span>ρ = <b>${c.density} g/mL</b></span>`:''}
+        <span>Na stanju: <b class="stock ${sc}">${c.stock.toFixed(3)} ${c.unit}</b></span>
+      </div>
+    </div>
+    <div class="card-acts">
+      <button class="btn-restock" onclick="openRestock('${c.id}')">${I.pc} Dopuni</button>
+      <button class="btn-icon" onclick="delChem('${c.id}')" title="Obriši">${I.trash}</button>
+    </div>
+  </div>`;
+}
+
+// ── Priprema tab ──────────────────────────────────────────────────────
+function tabP(){
+  if(!S.inv.length) return `
+    <div class="sec-title" style="margin-bottom:20px">Nova priprema rastvora</div>
+    <div class="empty">${I.flask}<p>Nema hemikalija u evidenciji</p>
+      <button class="btn btn-teal" style="margin-top:12px" onclick="go('zalihe')">Dodaj hemikalije</button></div>`;
+  
+  const t=S.prepType, cs=S.inv.find(c=>c.id===gv('p-chem'))||null;
+  // Use saved conc/vol from state if available (after re-render)
+  const sv=S._prepVals||{};
+  
+  return `<div class="sec-title" style="margin-bottom:20px">Nova priprema rastvora</div>
+  <div style="max-width:580px;display:grid;gap:14px">
+    <div>
+      <label class="flabel req">Hemikalija</label>
+      <select id="p-chem" onchange="prepChemChange()">
+        <option value="">— Odaberi hemikaliju —</option>
+        ${S.inv.map(c=>`<option value="${c.id}" ${sv.chemId===c.id?'selected':''}>${esc(c.name)}${c.f?' ('+c.f+')':''} — ${c.stock.toFixed(3)} ${c.unit}</option>`).join('')}
+      </select>
+      ${cs&&isLiq(cs.unit)?`<div class="hint-teal">💧 Tečna hemikalija — gustina: <b>${cs.density} g/mL</b> — rezultat u mL</div>`:''}
+    </div>
+    <div>
+      <label class="flabel req">Tip rastvora</label>
+      <div class="type-grid">
+        <button class="type-btn ${t==='M'?'active':''}" onclick="setType('M')">Molarni (mol/L)</button>
+        <button class="type-btn ${t==='N'?'active':''}" onclick="setType('N')">Normalni (eq/L)</button>
+      </div>
+      ${t==='N'&&cs?`<div class="hint-indigo">Ekvivalentna masa = ${cs.M}/${cs.n} = <b>${(cs.M/cs.n).toFixed(4)} g/eq</b></div>`:''}
+    </div>
+    <div class="frow cols3">
+      <div>
+        <label class="flabel req">Koncentracija (${t==='M'?'mol/L':'eq/L'})</label>
+        <input type="number" id="p-conc" min="0" step="0.001" value="${esc(sv.conc||'')}" placeholder="npr. 0.1" oninput="savePrepVals()">
+      </div>
+      <div>
+        <label class="flabel req">Zapremina</label>
+        <input type="number" id="p-vol" min="0" value="${esc(sv.vol||'')}" placeholder="npr. 500" oninput="savePrepVals()">
+      </div>
+      <div>
+        <label class="flabel">Jedinica</label>
+        <select id="p-volunit" onchange="savePrepVals()">
+          <option value="mL" ${(sv.volUnit||'mL')==='mL'?'selected':''}>mL</option>
+          <option value="L" ${sv.volUnit==='L'?'selected':''}>L</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <label class="flabel">Napomena (opciono)</label>
+      <input type="text" id="p-note" value="${esc(sv.note||'')}" placeholder="npr. titracija uzoraka vode" oninput="savePrepVals()">
+    </div>
+    <button class="btn-full" style="background:#6366f1;color:white" onclick="calcPrep()">Izračunaj →</button>
+    ${S.result?buildResult():''}
+    ${S.doneMsg?`<div class="done-msg">✓ Evidentirano! Preuzimam historiju...</div>`:''}
+  </div>`;
+}
+
+function buildResult(){
+  const r=S.result, p=S._prepVals||{};
+  const ok=r.sufficient;
+  const rows=[
+    ['Priprema se',`${p.conc} ${S.prepType} rastvor — ${p.vol} ${p.volUnit||'mL'}`,''],
+    ['Formula', S.prepType==='M'
+      ?`m = ${p.conc} × ${r.Vl.toFixed(4)} L × ${r.chem.M} g/mol`
+      :`m = ${p.conc} × ${r.Vl.toFixed(4)} L × (${r.chem.M}/${r.chem.n}) g/eq`,'mono'],
+    ['Masa hemikalije',`${r.mass.toFixed(4)} g`,'accent'],
+    r.liq?['Potrebno odmjeriti (zapreminski)',`${r.usedBase.toFixed(2)} mL`,'sky']:null,
+    ['Na stanju',`${r.stockBase.toFixed(3)} ${r.liq?'mL':'g'}`,''],
+    ['Ostaje nakon pripreme',`${r.remainBase.toFixed(3)} ${r.liq?'mL':'g'}`,ok?'green':'red'],
+  ].filter(Boolean);
+  return `<div class="result-box ${ok?'ok':'fail'}">
+    <div class="res-hdr" style="color:${ok?'#22c55e':'#ef4444'}">${ok?I.ok:I.alert}
+      <span class="res-status" style="color:${ok?'#22c55e':'#ef4444'}">${ok?'Dovoljna količina ✓':'Nedovoljna količina!'}</span>
+    </div>
+    <div class="res-rows">${rows.map(([l,v,c])=>`
+      <div class="res-row"><span class="res-lbl">${l}</span><span class="res-val ${c}">${v}</span></div>`).join('')}
+    </div>
+    ${ok?`<button class="btn-full btn-green" style="margin-top:16px" onclick="confirmPrep()">✓ Potvrdi pripremu i ažuriraj stanje</button>`:''}
+  </div>`;
+}
+
+// ── Historija tab ─────────────────────────────────────────────────────
+function tabH(){
+  return `<div class="sec-hdr">
+    <div class="sec-title">Historija priprema</div>
+    <span style="font-size:13px;color:#64748b">${S.hist.length} unosa</span>
+  </div>
+  ${!S.hist.length?`<div class="empty">${I.clock}<p>Nema evidentiranih priprema</p></div>`:`
+  <div style="display:grid;gap:10px">${S.hist.map(h=>{
+    const d=new Date(h.ts);
+    return `<div class="hist-item">
+      <div class="hist-info">
+        <div class="name-row">
+          <span class="chem-name">${esc(h.chemName)}</span>
+          ${h.chemF?`<span class="badge formula">${esc(h.chemF)}</span>`:''}
+          <span class="badge type">${h.conc} ${h.type}</span>
+          <span style="font-size:11px;color:#64748b">${h.vol} ${h.volUnit}</span>
+        </div>
+        <div class="meta">
+          <span>Potrošeno: <b style="color:#f59e0b">${h.used}</b></span>
+          <span>Ostalo: <b style="color:#94a3b8">${parseFloat(h.remain||0).toFixed(3)} ${h.sUnit||'g'}</b></span>
+          ${h.note?`<span>📝 ${esc(h.note)}</span>`:''}
+          <span style="margin-left:auto">${d.toLocaleDateString('bs-BA')} ${d.toLocaleTimeString('bs-BA',{hour:'2-digit',minute:'2-digit'})}</span>
+        </div>
+      </div>
+      <button class="btn-icon" onclick="delHist('${h.id}')" title="Obriši">${I.trash}</button>
+    </div>`;
+  }).join('')}</div>`}`;
+}
+
+// ── Modal: Dodaj hemikaliju ────────────────────────────────────────────
+function modalAdd(){
+  const c=S.nc, liq=isLiq(c.unit);
+  const ok=c.name&&c.M&&c.stock&&(!liq||c.d);
+  const dbf=S.dbSearch.trim()?DB.filter(x=>x.name.toLowerCase().includes(S.dbSearch.toLowerCase())||x.f.toLowerCase().includes(S.dbSearch.toLowerCase())).slice(0,7):[];
+  return `<div class="overlay" id="overlay-add" onclick="overlayClick('add')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+      <div class="modal-title">Dodaj hemikaliju</div>
+      <button class="btn-close" onclick="closeAdd()">${I.x}</button>
+    </div>
+    <!-- DB Search -->
+    <div class="mb14">
+      <label class="flabel">Pretraži ugrađenu bazu (${DB.length} hemikalija)</label>
+      <div class="search-wrap">${I.search}
+        <input type="text" id="db-search" value="${esc(S.dbSearch)}" oninput="dbInp(this.value)" placeholder="npr. sumporna, HCl, NaOH...">
+      </div>
+      ${dbf.length?`<div class="db-drop">${dbf.map((x,i)=>`
+        <div class="db-item" onclick="pickDB(${i})">
+          <span>${esc(x.name)}${x.liq?' 💧':''}</span>
+          <span class="db-form">${esc(x.f)}</span>
+        </div>`).join('')}</div>`:''}
+    </div>
+    <!-- AI -->
+    <div class="ai-box">
+      <label class="ai-lbl">🤖 AI pretraga — za hemikalije van baze</label>
+      <div class="ai-row">
+        <input type="text" id="ai-q" placeholder="Unesi naziv ili formulu..." style="flex:1">
+        <button class="btn btn-indigo" style="padding:9px 14px;white-space:nowrap" onclick="doAI()" ${S.aiLoading?'disabled':''}>
+          ${S.aiLoading?`<span class="spinning">${I.spin}</span> Tražim...`:`${I.search} Traži`}
+        </button>
+      </div>
+      ${!S.apiKey?`<div class="ai-warn">⚠ API ključ nije postavljen — <a onclick="setApiKey()">kliknite ovdje za unos</a></div>`:''}
+      ${S.aiNote?`<div class="ai-note ${S.aiErr?'err':''}">${esc(S.aiNote)}</div>`:''}
+    </div>
+    <!-- Fields -->
+    <div class="frow cols2 mb11">
+      <div><label class="flabel req">Naziv</label>
+        <input type="text" id="nc-name" value="${esc(c.name)}" oninput="ncu('name',this.value)" placeholder="npr. Sumporna kiselina"></div>
+      <div><label class="flabel">Formula</label>
+        <input type="text" id="nc-f" value="${esc(c.f)}" oninput="ncu('f',this.value)" placeholder="npr. H₂SO₄"></div>
+    </div>
+    <div class="frow cols2 mb11">
+      <div><label class="flabel req">Molarna masa (g/mol)</label>
+        <input type="number" id="nc-M" min="0" value="${esc(c.M)}" oninput="ncu('M',this.value)" placeholder="npr. 98.08"></div>
+      <div><label class="flabel">n-faktor</label>
+        <input type="number" id="nc-n" min="1" value="${esc(c.n)}" oninput="ncu('n',this.value)" placeholder="npr. 2"></div>
+    </div>
+    <!-- Unit selector -->
+    <div class="mb11">
+      <label class="flabel req">Agregatno stanje i jedinica zaliha</label>
+      <div class="unit-grid">
+        ${['g','kg','mL','L'].map(u=>`
+          <button class="unit-btn ${c.unit===u?(isLiq(u)?'act-liq':'act-solid'):''}" onclick="ncu('unit','${u}')">
+            ${u}<br><small>${u==='g'||u==='kg'?'čvrsto':'tečno'}</small>
+          </button>`).join('')}
+      </div>
+    </div>
+    ${liq?`<div class="den-box">
+      <label class="den-lbl">💧 Gustina (g/mL) * — obavezno za tečne hemikalije</label>
+      <input type="number" id="nc-d" min="0" step="0.001" value="${esc(c.d)}" oninput="ncu('d',this.value)" placeholder="npr. 1.84 za H₂SO₄ (96%)">
+      <div class="den-hint">Koristi se za preračunavanje mase u mL pri pripremi rastvora</div>
+    </div>`:''}
+    <!-- Stock -->
+    <div class="frow cols21 mb11">
+      <div><label class="flabel req">Trenutne zalihe</label>
+        <input type="number" id="nc-stock" min="0" value="${esc(c.stock)}" oninput="ncu('stock',this.value)" placeholder="npr. 500"></div>
+      <div><label class="flabel">Jedinica</label>
+        <div style="padding:9px 12px;background:#0f172a;border:1px solid #334155;border-radius:8px;color:${liq?'#38bdf8':'#2dd4bf'};font-weight:700;text-align:center">${c.unit}</div>
+      </div>
+    </div>
+    <button class="btn-full" style="background:${ok?'#2dd4bf':'#334155'};color:${ok?'#0f172a':'#64748b'}" onclick="addChem()" ${ok?'':'disabled'}>Dodaj u evidenciju</button>
+  </div></div>`;
+}
+
+// ── Modal: Dopuna ─────────────────────────────────────────────────────
+function modalRestock(){
+  const c=S.inv.find(x=>x.id===S.restockId);
+  if(!c) return '';
+  return `<div class="overlay" onclick="overlayClick('rest')">
+  <div class="modal sm" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+      <div class="modal-title">Dopuna zaliha</div>
+      <button class="btn-close" onclick="closeRestock()">${I.x}</button>
+    </div>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:14px">
+      <b style="color:#e2e8f0">${esc(c.name)}</b><br>
+      Trenutno: <b style="color:#2dd4bf">${c.stock.toFixed(3)} ${c.unit}</b>
+    </p>
+    <label class="flabel">Dodaj (${c.unit})</label>
+    <input type="number" id="r-amt" min="0" placeholder="npr. 500" style="margin-bottom:12px">
+    <button class="btn-full" style="background:#6366f1;color:#fff" onclick="doRestock()">Dodaj na stanje</button>
+  </div></div>`;
+}
+
+// ── Actions ───────────────────────────────────────────────────────────
+function go(t){S.tab=t;render();}
+function openAdd(){S.showAdd=true;S.dbSearch='';S.aiNote='';S.aiErr=false;render();}
+function closeAdd(){S.showAdd=false;render();}
+function openRestock(id){S.restockId=id;render();}
+function closeRestock(){S.restockId=null;render();}
+function overlayClick(t){if(event.target===event.currentTarget){if(t==='add')S.showAdd=false;else S.restockId=null;render();}}
+
+function dbInp(v){S.dbSearch=v;render();}
+
+function pickDB(i){
+  const filtered=DB.filter(x=>x.name.toLowerCase().includes(S.dbSearch.toLowerCase())||x.f.toLowerCase().includes(S.dbSearch.toLowerCase()));
+  const c=filtered[i]; if(!c) return;
+  S.nc={name:c.name,f:c.f,M:String(c.M),n:String(c.n),d:c.d?String(c.d):'',stock:'',unit:c.liq?'mL':'g'};
+  S.dbSearch='';S.aiNote='';render();
+}
+
+function ncu(field,val){
+  S.nc={...S.nc,[field]:val};
+  if(field==='unit') render(); // re-render to show/hide density
+}
+
+function setType(t){
+  savePrepVals();
+  S.prepType=t;S.result=null;render();
+}
+
+function prepChemChange(){
+  savePrepVals();
+  S.result=null;render();
+}
+
+function savePrepVals(){
+  S._prepVals={
+    chemId:gv('p-chem'),conc:gv('p-conc'),vol:gv('p-vol'),
+    volUnit:gv('p-volunit')||'mL',note:gv('p-note')
+  };
+}
+
+function calcPrep(){
+  savePrepVals();
+  const p=S._prepVals;
+  const chem=S.inv.find(c=>c.id===p.chemId);
+  if(!chem||!p.conc||!p.vol) return;
+  const C=parseFloat(p.conc),V=parseFloat(p.vol);
+  const Vl=p.volUnit==='mL'?V/1000:V;
+  const mass=S.prepType==='M'?C*Vl*chem.M:C*Vl*(chem.M/chem.n);
+  const liq=isLiq(chem.unit);
+  let stockBase,usedBase,remainBase;
+  if(liq){
+    stockBase=toML(chem.stock,chem.unit);
+    usedBase=chem.density?mass/chem.density:null;
+    remainBase=usedBase!==null?stockBase-usedBase:null;
+  } else {
+    stockBase=toG(chem.stock,chem.unit);
+    usedBase=mass;
+    remainBase=stockBase-mass;
+  }
+  S.result={chem,mass,Vl,liq,stockBase,usedBase,remainBase,sufficient:remainBase!==null&&remainBase>=0};
+  render();
+}
+
+function confirmPrep(){
+  const r=S.result; if(!r) return;
+  const {chem,mass,usedBase,remainBase,liq}=r;
+  const p=S._prepVals||{};
+  S.inv=S.inv.map(c=>{
+    if(c.id!==chem.id) return c;
+    const ns=liq?(c.unit==='L'?remainBase/1000:remainBase):(c.unit==='kg'?remainBase/1000:remainBase);
+    return {...c,stock:parseFloat(ns.toFixed(5))};
+  });
+  S.hist=[{
+    id:Date.now().toString(), ts:new Date().toISOString(),
+    chemName:chem.name, chemF:chem.f,
+    type:S.prepType, conc:p.conc, vol:p.vol, volUnit:p.volUnit||'mL',
+    used:liq?(usedBase?.toFixed(2)+' mL'):(mass.toFixed(4)+' g'),
+    massG:mass.toFixed(4), remain:remainBase?.toFixed(3), sUnit:chem.unit,
+    note:p.note||''
+  },...S.hist];
+  persist();
+  S._prepVals=null; S.result=null; S.doneMsg=true;
+  render();
+  setTimeout(()=>{S.doneMsg=false;go('historija');},1600);
+}
+
+function delChem(id){
+  if(!confirm('Obrisati ovu hemikaliju iz evidencije?')) return;
+  S.inv=S.inv.filter(c=>c.id!==id); persist(); render();
+}
+function delHist(id){S.hist=S.hist.filter(h=>h.id!==id);persist();render();}
+
+function doRestock(){
+  const amt=parseFloat(gv('r-amt'));
+  if(!amt||!S.restockId) return;
+  S.inv=S.inv.map(c=>c.id===S.restockId?{...c,stock:parseFloat((c.stock+amt).toFixed(4))}:c);
+  persist(); S.restockId=null; render();
+}
+
+function addChem(){
+  const c={
+    name:gv('nc-name')||S.nc.name, f:gv('nc-f')||S.nc.f,
+    M:parseFloat(gv('nc-M')||S.nc.M), n:parseFloat(gv('nc-n')||S.nc.n)||1,
+    density:isLiq(S.nc.unit)?parseFloat(gv('nc-d')||S.nc.d):null,
+    stock:parseFloat(gv('nc-stock')||S.nc.stock), unit:S.nc.unit,
+    id:Date.now().toString()
+  };
+  if(!c.name||!c.M||!c.stock) return;
+  if(isLiq(c.unit)&&!c.density) return;
+  S.inv=[...S.inv,c]; persist();
+  S.nc={name:'',f:'',M:'',n:'',d:'',stock:'',unit:'g'};
+  S.showAdd=false; S.aiNote=''; S.dbSearch=''; render();
+}
+
+// ── AI Lookup ─────────────────────────────────────────────────────────
+async function doAI(){
+  const q=gv('ai-q')?.trim(); if(!q) return;
+  if(!S.apiKey){setApiKey();return;}
+  S.aiLoading=true;S.aiNote='';S.aiErr=false;render();
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':S.apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:500,
+        system:`Chemistry expert. For the input, respond ONLY with JSON (no markdown):
+{"name":"name in Serbian or as given","f":"formula with Unicode subscripts","M":molar_mass_number,"n":n_factor_integer,"liq":true_or_false,"d":density_g_mL_or_null,"note":"Brief Serbian sentence about n-factor and use"}
+n: acids=H+ replaceable; bases=OH-; KMnO4 acid=5 neutral=3 base=1; K2Cr2O7=6; redox=electrons/formula. d=lab-grade density or null.`,
+        messages:[{role:'user',content:q}]
+      })
+    });
+    const data=await resp.json();
+    if(data.error) throw new Error(data.error.message);
+    const txt=data.content.filter(b=>b.type==='text').map(b=>b.text).join('').replace(/```[a-z]*/g,'').replace(/```/g,'').trim();
+    const p=JSON.parse(txt);
+    S.nc={name:p.name||q,f:p.f||'',M:String(p.M||''),n:String(p.n||''),d:p.d?String(p.d):'',stock:'',unit:p.liq?'mL':'g'};
+    S.aiNote=p.note||'';S.aiErr=false;
+  }catch(e){S.aiNote='Greška: '+e.message;S.aiErr=true;}
+  S.aiLoading=false;render();
+}
+
+function setApiKey(){
+  const k=prompt('Unesite Anthropic API ključ\n(Čuva se lokalno u browseru, nikada se ne šalje trećim stranama):',S.apiKey||'');
+  if(k!==null){S.apiKey=k;localStorage.setItem('lt4_apikey',k);if(S.showAdd)render();}
+}
+
+// ── HTML Export ───────────────────────────────────────────────────────
+function exportHTML(){
+  const now=new Date().toLocaleString('bs-BA');
+  const lowN=S.inv.filter(c=>{const b=isLiq(c.unit)?toML(c.stock,c.unit):toG(c.stock,c.unit);return b<100;}).length;
+  const iRows=S.inv.map(c=>{
+    const b=isLiq(c.unit)?toML(c.stock,c.unit):toG(c.stock,c.unit);
+    const low=b<100,crit=b<20;
+    return `<tr class="${crit?'crit':low?'low':''}">
+      <td>${c.name}${c.f?` <code>${c.f}</code>`:''}${crit?' <span class="br">⚠ Kritično</span>':low?' <span class="ba">Nisko</span>':''}</td>
+      <td>${isLiq(c.unit)?'💧 Tečno':'🧂 Čvrsto'}</td>
+      <td>${c.M}</td><td>${c.n}</td>
+      <td>${c.density?c.density+' g/mL':'—'}</td>
+      <td><b>${c.stock.toFixed(3)} ${c.unit}</b></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="6" class="ec">Nema hemikalija</td></tr>';
+  
+  const hRows=S.hist.map(h=>{
+    const d=new Date(h.ts);
+    return `<tr>
+      <td>${d.toLocaleDateString('bs-BA')} ${d.toLocaleTimeString('bs-BA',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td>${h.chemName}${h.chemF?` <code>(${h.chemF})</code>`:''}</td>
+      <td>${h.conc} ${h.type}</td><td>${h.vol} ${h.volUnit}</td>
+      <td>${h.used}</td>
+      <td>${parseFloat(h.remain||0).toFixed(3)} ${h.sUnit||'g'}</td>
+      <td>${h.note||'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="7" class="ec">Nema priprema</td></tr>';
+  
+  const doc=`<!DOCTYPE html>
+<html lang="bs"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LabTracker — Izvještaj ${now}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f8fafc;color:#1e293b;padding:32px;font-size:14px}
+h1{font-size:22px;margin-bottom:6px}
+.sub{color:#64748b;margin-bottom:24px;font-size:13px}
+.stats{display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap}
+.stat{background:#fff;border-radius:8px;padding:14px 20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.stat b{display:block;font-size:24px;color:#0f172a}
+.stat small{font-size:12px;color:#64748b}
+h2{font-size:13px;font-weight:700;margin:24px 0 10px;padding:9px 16px;background:#1e293b;color:#fff;border-radius:6px;letter-spacing:.03em}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:8px}
+th{background:#0f172a;color:#fff;padding:10px 14px;text-align:left;font-size:12px;font-weight:600}
+td{padding:9px 14px;border-bottom:1px solid #e2e8f0;font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr.low td{background:#fffbeb}
+tr.crit td{background:#fff1f2}
+.br{display:inline-block;padding:1px 7px;background:#fee2e2;color:#991b1b;border-radius:4px;font-size:11px;font-weight:600;margin-left:4px}
+.ba{display:inline-block;padding:1px 7px;background:#fef3c7;color:#92400e;border-radius:4px;font-size:11px;font-weight:600;margin-left:4px}
+code{font-family:monospace;color:#64748b}
+.ec{text-align:center;color:#94a3b8;padding:20px}
+footer{margin-top:32px;color:#94a3b8;font-size:12px;text-align:center;border-top:1px solid #e2e8f0;padding-top:16px}
+@media print{body{padding:16px}}
+</style></head>
+<body>
+<h1>🧪 LabTracker — Izvještaj</h1>
+<p class="sub">Generisano: ${now}</p>
+<div class="stats">
+  <div class="stat"><b>${S.inv.length}</b><small>hemikalija</small></div>
+  <div class="stat"><b>${S.hist.length}</b><small>priprema</small></div>
+  <div class="stat"><b>${lowN}</b><small>na niskim zalihama</small></div>
+</div>
+<h2>📦 STANJE ZALIHA</h2>
+<table><thead><tr><th>Hemikalija</th><th>Vrsta</th><th>M (g/mol)</th><th>n-faktor</th><th>Gustina</th><th>Na stanju</th></tr></thead>
+<tbody>${iRows}</tbody></table>
+<h2>📋 HISTORIJA PRIPREMA</h2>
+<table><thead><tr><th>Datum i vrijeme</th><th>Hemikalija</th><th>Rastvor</th><th>Zapremina</th><th>Potrošeno</th><th>Ostalo</th><th>Napomena</th></tr></thead>
+<tbody>${hRows}</tbody></table>
+<footer>LabTracker — Sistem evidencije potrošnje hemikalija</footer>
+</body></html>`;
+  
+  const blob=new Blob([doc],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`LabTracker_${new Date().toISOString().slice(0,10)}.html`; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+loadData();
+render();
+</script>
+</body>
+</html>
